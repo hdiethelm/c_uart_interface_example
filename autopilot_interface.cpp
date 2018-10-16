@@ -91,7 +91,7 @@ set_position(float x, float y, float z, mavlink_set_position_target_local_ned_t 
 	sp.y   = y;
 	sp.z   = z;
 
-	printf("POSITION SETPOINT XYZ = [ %.4f , %.4f , %.4f ] \n", sp.x, sp.y, sp.z);
+	printf("POSITION SETPOINT XYZ = [ %.4f , %.4f , %.4f ] 0x%x\n", sp.x, sp.y, sp.z, sp.type_mask);
 
 }
 
@@ -520,6 +520,32 @@ disable_offboard_control()
 
 }
 
+// ------------------------------------------------------------------------------
+//   Arm
+// ------------------------------------------------------------------------------
+int
+Autopilot_Interface::
+arm_disarm( bool flag )
+{
+	// Prepare command for off-board mode
+	mavlink_command_long_t com = { 0 };
+	com.target_system    = system_id;
+	com.target_component = autopilot_id;
+	com.command          = MAV_CMD_COMPONENT_ARM_DISARM;
+	com.confirmation     = true;
+	com.param1           = (float) flag;
+	com.param2           = 21196;
+
+	// Encode
+	mavlink_message_t message;
+	mavlink_msg_command_long_encode(system_id, companion_id, &message, &com);
+
+	// Send the message
+	int len = port->write_message(message);
+
+	// Done!
+	return len;
+}
 
 // ------------------------------------------------------------------------------
 //   Toggle Off-Board Mode

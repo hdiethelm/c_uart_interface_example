@@ -111,6 +111,10 @@
 #define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_YAW_ANGLE    0b0000100111111111
 #define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_YAW_RATE     0b0000010111111111
 
+#define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_TAKEOFF      0x1000
+#define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_LAND         0x2000
+#define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_LOITER       0x3000
+#define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_IDLE         0x4000
 
 // ------------------------------------------------------------------------------
 //   Prototypes
@@ -263,6 +267,7 @@ public:
 	void read_messages();
 	int  write_message(mavlink_message_t message);
 
+	int	 arm_disarm( bool flag );
 	void enable_offboard_control();
 	void disable_offboard_control();
 

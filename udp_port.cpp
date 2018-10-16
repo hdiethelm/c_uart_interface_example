@@ -231,6 +231,7 @@ start()
 		close(sock);
 		throw EXIT_FAILURE;
 	}
+	//if (fcntl(rx_sock, F_SETFL, O_NONBLOCK | O_ASYNC) < 0)
 	if (fcntl(sock, F_SETFL, O_ASYNC) < 0)
 	{
 		fprintf(stderr, "error setting nonblocking: %s\n", strerror(errno));

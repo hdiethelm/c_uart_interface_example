@@ -95,7 +95,8 @@ top (int argc, char **argv)
 	 */
 	Generic_Port *port;
 	if(true){
-		port = new UDP_Port("127.0.0.1", 14550, 14556);
+		//port = new UDP_Port("127.0.0.1", 14550, 14556);
+		port = new UDP_Port("127.0.0.1", 14540, 14557);
 	}else{
 		port = new Serial_Port(uart_name, baudrate);
 	}
@@ -187,6 +188,8 @@ commands(Autopilot_Interface &api)
 
 	// now the autopilot is accepting setpoint commands
 
+	api.arm_disarm(true);
+	usleep(100); // give some time to let it sink in
 
 	// --------------------------------------------------------------------------
 	//   SEND OFFBOARD COMMANDS
@@ -200,17 +203,14 @@ commands(Autopilot_Interface &api)
 	// autopilot_interface.h provides some helper functions to build the command
 
 
-	// Example 1 - Set Velocity
-//	set_velocity( -1.0       , // [m/s]
-//				  -1.0       , // [m/s]
-//				   0.0       , // [m/s]
-//				   sp        );
+
 
 	// Example 2 - Set Position
-	 set_position( ip.x - 5.0 , // [m]
-			 	   ip.y - 5.0 , // [m]
-				   ip.z       , // [m]
+	 set_position( ip.x , // [m]
+			 	   ip.y , // [m]
+				   ip.z - 2.0      , // [m]
 				   sp         );
+	 sp.type_mask |= MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_TAKEOFF;
 
 
 	// Example 1.2 - Append Yaw Command
@@ -229,8 +229,49 @@ commands(Autopilot_Interface &api)
 		sleep(1);
 	}
 
+
+	// Example 1 - Set Velocity
+	set_velocity( -1.0       , // [m/s]
+				  -1.0       , // [m/s]
+				   0.0       , // [m/s]
+				   sp        );
+
+	// SEND THE COMMAND
+	api.update_setpoint(sp);
+	// NOW pixhawk will try to move
+
+	// Wait for 8 seconds, check position
+	for (int i=0; i < 8; i++)
+	{
+		mavlink_local_position_ned_t pos = api.current_messages.local_position_ned;
+		printf("%i CURRENT POSITION XYZ = [ % .4f , % .4f , % .4f ] \n", i, pos.x, pos.y, pos.z);
+		sleep(1);
+	}
+
+	// Example 1 - Set Velocity
+	set_velocity(  0.0       , // [m/s]
+				   0.0       , // [m/s]
+				   1.0       , // [m/s]
+				   sp        );
+
+	sp.type_mask |= MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_LAND;
+
+	// SEND THE COMMAND
+	api.update_setpoint(sp);
+	// NOW pixhawk will try to move
+
+	// Wait for 8 seconds, check position
+	for (int i=0; i < 8; i++)
+	{
+		mavlink_local_position_ned_t pos = api.current_messages.local_position_ned;
+		printf("%i CURRENT POSITION XYZ = [ % .4f , % .4f , % .4f ] \n", i, pos.x, pos.y, pos.z);
+		sleep(1);
+	}
+
 	printf("\n");
 
+	api.arm_disarm(false);
+	usleep(100); // give some time to let it sink in
 
 	// --------------------------------------------------------------------------
 	//   STOP OFFBOARD MODE
