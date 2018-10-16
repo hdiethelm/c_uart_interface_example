@@ -121,18 +121,20 @@ public:
 
 private:
 
-	int  fd;
 	mavlink_status_t lastStatus;
 	pthread_mutex_t  lock;
 
 	void initialize_defaults();
 
+	const static int BUFF_LEN=2041;
+	char buff[BUFF_LEN];
+	int buff_ptr;
+	int buff_len;
 	bool debug;
 	const char *target_ip;
 	int rx_port;
 	int tx_port;
-	int rx_sock;
-	int tx_sock;
+	int sock;
 	struct sockaddr_in rx_addr;
 	struct sockaddr_in tx_addr;
 	bool is_open;

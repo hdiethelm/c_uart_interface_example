@@ -55,11 +55,13 @@
 //   Includes
 // ------------------------------------------------------------------------------
 
-#include "serial_port.h"
+#include "generic_port.h"
 
 #include <signal.h>
 #include <time.h>
 #include <sys/time.h>
+#include <pthread.h> // This uses POSIX Threads
+#include <unistd.h>  // UNIX standard function definitions
 
 #include <common/mavlink.h>
 
@@ -242,7 +244,7 @@ class Autopilot_Interface
 public:
 
 	Autopilot_Interface();
-	Autopilot_Interface(Serial_Port *serial_port_);
+	Autopilot_Interface(Generic_Port *port_);
 	~Autopilot_Interface();
 
 	char reading_status;
@@ -275,7 +277,7 @@ public:
 
 private:
 
-	Serial_Port *serial_port;
+	Generic_Port *port;
 
 	bool time_to_exit;
 

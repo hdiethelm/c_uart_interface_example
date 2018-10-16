@@ -93,7 +93,12 @@ top (int argc, char **argv)
 	 * pthread mutex lock.
 	 *
 	 */
-	Serial_Port serial_port(uart_name, baudrate);
+	Generic_Port *port;
+	if(true){
+		port = new UDP_Port("127.0.0.1", 14550, 14556);
+	}else{
+		port = new Serial_Port(uart_name, baudrate);
+	}
 
 
 	/*
@@ -111,7 +116,7 @@ top (int argc, char **argv)
 	 * otherwise the vehicle will go into failsafe.
 	 *
 	 */
-	Autopilot_Interface autopilot_interface(&serial_port);
+	Autopilot_Interface autopilot_interface(port);
 
 	/*
 	 * Setup interrupt signal handler
@@ -121,7 +126,7 @@ top (int argc, char **argv)
 	 * The handler in this example needs references to the above objects.
 	 *
 	 */
-	serial_port_quit         = &serial_port;
+	port_quit         = port;
 	autopilot_interface_quit = &autopilot_interface;
 	signal(SIGINT,quit_handler);
 
@@ -129,7 +134,7 @@ top (int argc, char **argv)
 	 * Start the port and autopilot_interface
 	 * This is where the port is opened, and read and write threads are started.
 	 */
-	serial_port.start();
+	port->start();
 	autopilot_interface.start();
 
 
@@ -151,8 +156,9 @@ top (int argc, char **argv)
 	 * Now that we are done we can stop the threads and close the port
 	 */
 	autopilot_interface.stop();
-	serial_port.stop();
+	port->stop();
 
+	delete port;
 
 	// --------------------------------------------------------------------------
 	//   DONE
@@ -340,7 +346,7 @@ quit_handler( int sig )
 
 	// serial port
 	try {
-		serial_port_quit->handle_quit(sig);
+		port_quit->stop();
 	}
 	catch (int error){}
 

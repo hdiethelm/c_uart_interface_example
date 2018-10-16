@@ -286,22 +286,6 @@ stop()
 }
 
 // ------------------------------------------------------------------------------
-//   Quit Handler
-// ------------------------------------------------------------------------------
-void
-Serial_Port::
-handle_quit( int sig )
-{
-	try {
-		stop();
-	}
-	catch (int error) {
-		fprintf(stderr,"Warning, could not stop serial port\n");
-	}
-}
-
-
-// ------------------------------------------------------------------------------
 //   Helper Function - Open Serial Port File Descriptor
 // ------------------------------------------------------------------------------
 // Where the actual port opening happens, returns file descriptor 'fd'

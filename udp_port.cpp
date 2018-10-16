@@ -95,8 +95,7 @@ initialize_defaults()
 	tx_port  = 14556;
 	is_open = false;
 	debug = false;
-	rx_sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	tx_sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
 	// Start mutex
 	int result = pthread_mutex_init(&lock, NULL);
@@ -148,7 +147,7 @@ read_message(mavlink_message_t &message)
 	// Couldn't read from port
 	else
 	{
-		fprintf(stderr, "ERROR: Could not read from fd %d\n", fd);
+		//fprintf(stderr, "ERROR: Could not read from fd %d\n", fd);
 	}
 
 	// --------------------------------------------------------------------------
@@ -226,16 +225,16 @@ start()
 	rx_addr.sin_addr.s_addr = INADDR_ANY;
 	rx_addr.sin_port = htons(rx_port);
 
-	if (bind(rx_sock, (struct sockaddr *) &rx_addr, sizeof(struct sockaddr)))
+	if (bind(sock, (struct sockaddr *) &rx_addr, sizeof(struct sockaddr)))
 	{
 		perror("error bind failed");
-		close(rx_sock);
+		close(sock);
 		throw EXIT_FAILURE;
 	}
-	if (fcntl(rx_sock, F_SETFL, O_NONBLOCK | O_ASYNC) < 0)
+	if (fcntl(sock, F_SETFL, O_ASYNC) < 0)
 	{
 		fprintf(stderr, "error setting nonblocking: %s\n", strerror(errno));
-		close(rx_sock);
+		close(sock);
 		throw EXIT_FAILURE;
 	}
 
@@ -247,7 +246,7 @@ start()
 	// --------------------------------------------------------------------------
 	//   CONNECTED!
 	// --------------------------------------------------------------------------
-	printf("Connected to %s tx:%i rx:i\n", target_ip, tx_port, rx_port);
+	printf("Connected to %s tx:%i rx:%i\n", target_ip, tx_port, rx_port);
 	lastStatus.packet_rx_drop_count = 0;
 
 	is_open = true;
@@ -268,7 +267,7 @@ stop()
 {
 	printf("CLOSE PORT\n");
 
-	int result = close(fd);
+	int result = close(sock);
 
 	if ( result )
 	{
@@ -309,7 +308,21 @@ _read_port(uint8_t &cp)
 	// Lock
 	pthread_mutex_lock(&lock);
 
-	int result = recvfrom(rx_sock, &cp, 1, 0, (struct sockaddr *)&rx_addr, &len);
+	int result = -1;
+	if(buff_ptr < buff_len){
+		cp=buff[buff_ptr];
+		buff_ptr++;
+		result=1;
+	}else{
+		int result = recvfrom(sock, &buff, BUFF_LEN, 0, (struct sockaddr *)&rx_addr, &len);
+		if(result > 0){
+			buff_len=result;
+			buff_ptr=0;
+			cp=buff[buff_ptr];
+			buff_ptr++;
+			//printf("recvfrom: %i %i\n", result, cp);
+		}
+	}
 
 	// Unlock
 	pthread_mutex_unlock(&lock);
@@ -330,8 +343,8 @@ _write_port(char *buf, unsigned len)
 	pthread_mutex_lock(&lock);
 
 	// Write packet via serial link
-	const int bytesWritten = sendto(tx_sock, buf, len, 0, (struct sockaddr*)&tx_addr, sizeof(struct sockaddr_in));
-
+	const int bytesWritten = sendto(sock, buf, len, 0, (struct sockaddr*)&tx_addr, sizeof(struct sockaddr_in));
+	//printf("sendto: %i\n", bytesWritten);
 
 	// Unlock
 	pthread_mutex_unlock(&lock);

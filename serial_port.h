@@ -118,8 +118,6 @@ public:
 	void start();
 	void stop();
 
-	void handle_quit( int sig );
-
 private:
 
 	int  fd;
