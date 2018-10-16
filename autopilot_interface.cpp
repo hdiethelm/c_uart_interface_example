@@ -561,7 +561,7 @@ start()
 	//   CHECK SERIAL PORT
 	// --------------------------------------------------------------------------
 
-	if ( serial_port->status != 1 ) // SERIAL_PORT_OPEN
+	if ( !serial_port->is_running() ) // SERIAL_PORT_OPEN
 	{
 		fprintf(stderr,"ERROR: serial port not open\n");
 		throw 1;

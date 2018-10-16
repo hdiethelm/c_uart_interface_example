@@ -47,20 +47,29 @@
  *
  */
 
-#ifndef SERIAL_PORT_H_
-#define SERIAL_PORT_H_
+#ifndef UDP_PORT_H_
+#define UDP_PORT_H_
 
 // ------------------------------------------------------------------------------
 //   Includes
 // ------------------------------------------------------------------------------
 
 #include <cstdlib>
-#include <stdio.h>   // Standard input/output definitions
-#include <unistd.h>  // UNIX standard function definitions
-#include <fcntl.h>   // File control definitions
-#include <termios.h> // POSIX terminal control definitions
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
 #include <pthread.h> // This uses POSIX Threads
-#include <signal.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <time.h>
+#include <sys/time.h>
+#include <time.h>
+#include <arpa/inet.h>
+#include <stdbool.h>
 
 #include <common/mavlink.h>
 
@@ -69,16 +78,6 @@
 // ------------------------------------------------------------------------------
 //   Defines
 // ------------------------------------------------------------------------------
-
-// The following two non-standard baudrates should have been defined by the system
-// If not, just fallback to number
-#ifndef B460800
-#define B460800 460800
-#endif
-
-#ifndef B921600
-#define B921600 921600
-#endif
 
 // ------------------------------------------------------------------------------
 //   Prototypes
@@ -100,14 +99,14 @@
  * a serialization interface.  To help with read and write pthreading, it
  * gaurds any port operation with a pthread mutex.
  */
-class Serial_Port: public Generic_Port
+class UDP_Port: public Generic_Port
 {
 
 public:
 
-	Serial_Port();
-	Serial_Port(const char *uart_name_, int baudrate_);
-	virtual ~Serial_Port();
+	UDP_Port();
+	UDP_Port(const char *target_ip_, int rx_port_, int tx_port_);
+	virtual ~UDP_Port();
 
 	int read_message(mavlink_message_t &message);
 	int write_message(const mavlink_message_t &message);
@@ -129,12 +128,15 @@ private:
 	void initialize_defaults();
 
 	bool debug;
-	const char *uart_name;
-	int  baudrate;
+	const char *target_ip;
+	int rx_port;
+	int tx_port;
+	int rx_sock;
+	int tx_sock;
+	struct sockaddr_in rx_addr;
+	struct sockaddr_in tx_addr;
 	bool is_open;
 
-	int  _open_port(const char* port);
-	bool _setup_port(int baud, int data_bits, int stop_bits, bool parity, bool hardware_control);
 	int  _read_port(uint8_t &cp);
 	int _write_port(char *buf, unsigned len);
 
@@ -142,6 +144,6 @@ private:
 
 
 
-#endif // SERIAL_PORT_H_
+#endif // UDP_PORT_H_
 
 
