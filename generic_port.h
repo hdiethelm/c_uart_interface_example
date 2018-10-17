@@ -1,7 +1,8 @@
 /****************************************************************************
  *
- *   Copyright (c) 2014 MAVlink Development Team. All rights reserved.
- *   Author: Trent Lukaczyk, <aerialhedgehog@gmail.com>
+ *   Copyright (c) 2018 MAVlink Development Team. All rights reserved.
+ *   Author: Hannes Diethelm, <hannes.diethelm@gmail.com>
+ *           Trent Lukaczyk, <aerialhedgehog@gmail.com>
  *           Jaycee Lock,    <jaycee.lock@gmail.com>
  *           Lorenz Meier,   <lm@inf.ethz.ch>
  *
@@ -35,12 +36,13 @@
  ****************************************************************************/
 
 /**
- * @file serial_port.h
+ * @file generic_port.h
  *
- * @brief Serial interface definition
+ * @brief Generic interface definition
  *
- * Functions for opening, closing, reading and writing via serial ports
+ * Abstract port definition
  *
+ * @author Hannes Diethelm, <hannes.diethelm@gmail.com>
  * @author Trent Lukaczyk, <aerialhedgehog@gmail.com>
  * @author Jaycee Lock,    <jaycee.lock@gmail.com>
  * @author Lorenz Meier,   <lm@inf.ethz.ch>
@@ -64,23 +66,16 @@
 //   Prototypes
 // ------------------------------------------------------------------------------
 
-//class Serial_Port;
-
 // ----------------------------------------------------------------------------------
-//   Serial Port Manager Class
+//   Generic Port Manager Class
 // ----------------------------------------------------------------------------------
 /*
- * Serial Port Class
+ * Generic Port Class
  *
- * This object handles the opening and closing of the offboard computer's
- * serial port over which we'll communicate.  It also has methods to write
- * a byte stream buffer.  MAVlink is not used in this object yet, it's just
- * a serialization interface.  To help with read and write pthreading, it
- * gaurds any port operation with a pthread mutex.
+ * This is an abstract port definition to handle both serial and UDP ports.
  */
 class Generic_Port
 {
-
 public:
 	Generic_Port(){};
 	virtual ~Generic_Port(){};

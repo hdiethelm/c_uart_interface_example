@@ -91,7 +91,7 @@ set_position(float x, float y, float z, mavlink_set_position_target_local_ned_t 
 	sp.y   = y;
 	sp.z   = z;
 
-	printf("POSITION SETPOINT XYZ = [ %.4f , %.4f , %.4f ] 0x%x\n", sp.x, sp.y, sp.z, sp.type_mask);
+	printf("POSITION SETPOINT XYZ = [ %.4f , %.4f , %.4f ] \n", sp.x, sp.y, sp.z);
 
 }
 
@@ -113,7 +113,7 @@ set_velocity(float vx, float vy, float vz, mavlink_set_position_target_local_ned
 	sp.vy  = vy;
 	sp.vz  = vz;
 
-	//printf("VELOCITY SETPOINT UVW = [ %.4f , %.4f , %.4f ] \n", sp.vx, sp.vy, sp.vz);
+	printf("VELOCITY SETPOINT UVW = [ %.4f , %.4f , %.4f ] \n", sp.vx, sp.vy, sp.vz);
 
 }
 
@@ -207,7 +207,7 @@ Autopilot_Interface(Generic_Port *port_)
 	current_messages.sysid  = system_id;
 	current_messages.compid = autopilot_id;
 
-	port = port_; // serial port management object
+	port = port_; // port management object
 
 }
 
@@ -584,12 +584,12 @@ start()
 	int result;
 
 	// --------------------------------------------------------------------------
-	//   CHECK SERIAL PORT
+	//   CHECK PORT
 	// --------------------------------------------------------------------------
 
 	if ( !port->is_running() ) // PORT_OPEN
 	{
-		fprintf(stderr,"ERROR: serial port not open\n");
+		fprintf(stderr,"ERROR: port not open\n");
 		throw 1;
 	}
 

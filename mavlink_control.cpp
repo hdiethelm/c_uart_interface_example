@@ -84,13 +84,13 @@ top (int argc, char **argv)
 	// --------------------------------------------------------------------------
 
 	/*
-	 * Instantiate a serial port object
+	 * Instantiate a generic port object
 	 *
 	 * This object handles the opening and closing of the offboard computer's
-	 * serial port over which it will communicate to an autopilot.  It has
+	 * port over which it will communicate to an autopilot.  It has
 	 * methods to read and write a mavlink_message_t object.  To help with read
 	 * and write in the context of pthreading, it gaurds port operations with a
-	 * pthread mutex lock.
+	 * pthread mutex lock. It can be a serial or an UDP port.
 	 *
 	 */
 	Generic_Port *port;
@@ -327,7 +327,7 @@ parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate)
 {
 
 	// string for command line usage
-	const char *commandline_usage = "usage: mavlink_serial -d <devicename> -b <baudrate>";
+	const char *commandline_usage = "usage: mavlink_control -d <devicename> -b <baudrate>";
 
 	// Read input arguments
 	for (int i = 1; i < argc; i++) { // argv[0] is "mavlink"
@@ -385,7 +385,7 @@ quit_handler( int sig )
 	}
 	catch (int error){}
 
-	// serial port
+	// port
 	try {
 		port_quit->stop();
 	}

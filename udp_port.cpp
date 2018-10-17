@@ -1,7 +1,8 @@
 /****************************************************************************
  *
- *   Copyright (c) 2014 MAVlink Development Team. All rights reserved.
- *   Author: Trent Lukaczyk, <aerialhedgehog@gmail.com>
+ *   Copyright (c) 2018 MAVlink Development Team. All rights reserved.
+ *   Author: Hannes Diethelm, <hannes.diethelm@gmail.com>
+ *           Trent Lukaczyk, <aerialhedgehog@gmail.com>
  *           Jaycee Lock,    <jaycee.lock@gmail.com>
  *           Lorenz Meier,   <lm@inf.ethz.ch>
  *
@@ -37,10 +38,11 @@
 /**
  * @file udp_port.cpp
  *
- * @brief Serial interface functions
+ * @brief UDP interface functions
  *
- * Functions for opening, closing, reading and writing via serial ports
+ * Functions for opening, closing, reading and writing via UDP ports
  *
+ * @author Hannes Diethelm, <hannes.diethelm@gmail.com>
  * @author Trent Lukaczyk, <aerialhedgehog@gmail.com>
  * @author Jaycee Lock,    <jaycee.lock@gmail.com>
  * @author Lorenz Meier,   <lm@inf.ethz.ch>
@@ -56,7 +58,7 @@
 
 
 // ----------------------------------------------------------------------------------
-//   Serial Port Manager Class
+//   UDP Port Manager Class
 // ----------------------------------------------------------------------------------
 
 // ------------------------------------------------------------------------------
@@ -108,7 +110,7 @@ initialize_defaults()
 
 
 // ------------------------------------------------------------------------------
-//   Read from Serial
+//   Read from UDP
 // ------------------------------------------------------------------------------
 int
 UDP_Port::
@@ -156,9 +158,9 @@ read_message(mavlink_message_t &message)
 	if(msgReceived && debug)
 	{
 		// Report info
-		printf("Received message from serial with ID #%d (sys:%d|comp:%d):\n", message.msgid, message.sysid, message.compid);
+		printf("Received message from UDP with ID #%d (sys:%d|comp:%d):\n", message.msgid, message.sysid, message.compid);
 
-		fprintf(stderr,"Received serial data: ");
+		fprintf(stderr,"Received UDP data: ");
 		unsigned int i;
 		uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
 
@@ -188,7 +190,7 @@ read_message(mavlink_message_t &message)
 }
 
 // ------------------------------------------------------------------------------
-//   Write to Serial
+//   Write to UDP
 // ------------------------------------------------------------------------------
 int
 UDP_Port::
@@ -199,7 +201,7 @@ write_message(const mavlink_message_t &message)
 	// Translate message to buffer
 	unsigned len = mavlink_msg_to_send_buffer((uint8_t*)buf, &message);
 
-	// Write buffer to serial port, locks port while writing
+	// Write buffer to UDP port, locks port while writing
 	int bytesWritten = _write_port(buf,len);
 
 	return bytesWritten;
@@ -207,7 +209,7 @@ write_message(const mavlink_message_t &message)
 
 
 // ------------------------------------------------------------------------------
-//   Open Serial Port
+//   Open UDP Port
 // ------------------------------------------------------------------------------
 /**
  * throws EXIT_FAILURE if could not open the port
@@ -260,7 +262,7 @@ start()
 
 
 // ------------------------------------------------------------------------------
-//   Close Serial Port
+//   Close UDP Port
 // ------------------------------------------------------------------------------
 void
 UDP_Port::
@@ -292,7 +294,7 @@ handle_quit( int sig )
 		stop();
 	}
 	catch (int error) {
-		fprintf(stderr,"Warning, could not stop serial port\n");
+		fprintf(stderr,"Warning, could not stop UDP port\n");
 	}
 }
 
@@ -343,7 +345,7 @@ _write_port(char *buf, unsigned len)
 	// Lock
 	pthread_mutex_lock(&lock);
 
-	// Write packet via serial link
+	// Write packet via UDP link
 	const int bytesWritten = sendto(sock, buf, len, 0, (struct sockaddr*)&tx_addr, sizeof(struct sockaddr_in));
 	//printf("sendto: %i\n", bytesWritten);
 
