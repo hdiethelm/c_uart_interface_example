@@ -1,7 +1,8 @@
 /****************************************************************************
  *
- *   Copyright (c) 2014 MAVlink Development Team. All rights reserved.
- *   Author: Trent Lukaczyk, <aerialhedgehog@gmail.com>
+ *   Copyright (c) 2018 MAVlink Development Team. All rights reserved.
+ *   Author: Hannes Diethelm, <hannes.diethelm@gmail.com>
+ *           Trent Lukaczyk, <aerialhedgehog@gmail.com>
  *           Jaycee Lock,    <jaycee.lock@gmail.com>
  *           Lorenz Meier,   <lm@inf.ethz.ch>
  *
@@ -35,12 +36,13 @@
  ****************************************************************************/
 
 /**
- * @file serial_port.h
+ * @file udp_port.h
  *
  * @brief Serial interface definition
  *
  * Functions for opening, closing, reading and writing via serial ports
  *
+ * @author Hannes Diethelm, <hannes.diethelm@gmail.com>
  * @author Trent Lukaczyk, <aerialhedgehog@gmail.com>
  * @author Jaycee Lock,    <jaycee.lock@gmail.com>
  * @author Lorenz Meier,   <lm@inf.ethz.ch>
@@ -116,8 +118,6 @@ public:
 	}
 	void start();
 	void stop();
-
-	void handle_quit( int sig );
 
 private:
 

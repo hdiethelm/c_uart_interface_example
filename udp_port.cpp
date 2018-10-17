@@ -149,7 +149,7 @@ read_message(mavlink_message_t &message)
 	// Couldn't read from port
 	else
 	{
-		//fprintf(stderr, "ERROR: Could not read from fd %d\n", fd);
+		fprintf(stderr, "ERROR: Could not read, res = %d, errno = %d : %m\n", result, errno);
 	}
 
 	// --------------------------------------------------------------------------
@@ -203,6 +203,9 @@ write_message(const mavlink_message_t &message)
 
 	// Write buffer to UDP port, locks port while writing
 	int bytesWritten = _write_port(buf,len);
+	if(bytesWritten < 0){
+		fprintf(stderr, "ERROR: Could not write, res = %d, errno = %d : %m\n", bytesWritten, errno);
+	}
 
 	return bytesWritten;
 }
@@ -233,13 +236,12 @@ start()
 		close(sock);
 		throw EXIT_FAILURE;
 	}
-	//if (fcntl(rx_sock, F_SETFL, O_NONBLOCK | O_ASYNC) < 0)
-	if (fcntl(sock, F_SETFL, O_ASYNC) < 0)
+	/*if (fcntl(sock, F_SETFL, O_NONBLOCK | O_ASYNC) < 0)
 	{
 		fprintf(stderr, "error setting nonblocking: %s\n", strerror(errno));
 		close(sock);
 		throw EXIT_FAILURE;
-	}
+	}*/
 
 	memset(&tx_addr, 0, sizeof(tx_addr));
 	tx_addr.sin_family = AF_INET;
@@ -284,21 +286,6 @@ stop()
 }
 
 // ------------------------------------------------------------------------------
-//   Quit Handler
-// ------------------------------------------------------------------------------
-void
-UDP_Port::
-handle_quit( int sig )
-{
-	try {
-		stop();
-	}
-	catch (int error) {
-		fprintf(stderr,"Warning, could not stop UDP port\n");
-	}
-}
-
-// ------------------------------------------------------------------------------
 //   Read Port with Lock
 // ------------------------------------------------------------------------------
 int
@@ -317,7 +304,7 @@ _read_port(uint8_t &cp)
 		buff_ptr++;
 		result=1;
 	}else{
-		int result = recvfrom(sock, &buff, BUFF_LEN, 0, (struct sockaddr *)&rx_addr, &len);
+		result = recvfrom(sock, &buff, BUFF_LEN, 0, (struct sockaddr *)&rx_addr, &len);
 		if(result > 0){
 			buff_len=result;
 			buff_ptr=0;
