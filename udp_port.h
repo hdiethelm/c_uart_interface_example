@@ -36,12 +36,13 @@
  ****************************************************************************/
 
 /**
- * @file serial_port.h
+ * @file udp_port.h
  *
  * @brief Serial interface definition
  *
  * Functions for opening, closing, reading and writing via serial ports
  *
+ * @author Hannes Diethelm, <hannes.diethelm@gmail.com>
  * @author Trent Lukaczyk, <aerialhedgehog@gmail.com>
  * @author Jaycee Lock,    <jaycee.lock@gmail.com>
  * @author Lorenz Meier,   <lm@inf.ethz.ch>
