@@ -109,8 +109,7 @@ public:
 	Serial_Port(const char *uart_name_, int baudrate_);
 	virtual ~Serial_Port();
 
-	int read_message(mavlink_message_t &message);
-	int write_message(const mavlink_message_t &message);
+	//read_message and write_message are implemented in base class
 
 	bool is_running(){
 		return is_open;
@@ -121,12 +120,10 @@ public:
 private:
 
 	int  fd;
-	mavlink_status_t lastStatus;
 	pthread_mutex_t  lock;
 
 	void initialize_defaults();
 
-	bool debug;
 	const char *uart_name;
 	int  baudrate;
 	bool is_open;

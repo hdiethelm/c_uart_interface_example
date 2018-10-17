@@ -96,7 +96,6 @@ initialize_defaults()
 	rx_port  = 14550;
 	tx_port  = 14556;
 	is_open = false;
-	debug = false;
 	sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
 	// Start mutex
@@ -107,106 +106,6 @@ initialize_defaults()
 		throw 1;
 	}
 }
-
-
-// ------------------------------------------------------------------------------
-//   Read from UDP
-// ------------------------------------------------------------------------------
-int
-UDP_Port::
-read_message(mavlink_message_t &message)
-{
-	uint8_t          cp;
-	mavlink_status_t status;
-	uint8_t          msgReceived = false;
-
-	// --------------------------------------------------------------------------
-	//   READ FROM PORT
-	// --------------------------------------------------------------------------
-
-	// this function locks the port during read
-	int result = _read_port(cp);
-
-
-	// --------------------------------------------------------------------------
-	//   PARSE MESSAGE
-	// --------------------------------------------------------------------------
-	if (result > 0)
-	{
-		// the parsing
-		msgReceived = mavlink_parse_char(MAVLINK_COMM_1, cp, &message, &status);
-
-		// check for dropped packets
-		if ( (lastStatus.packet_rx_drop_count != status.packet_rx_drop_count) && debug )
-		{
-			printf("ERROR: DROPPED %d PACKETS\n", status.packet_rx_drop_count);
-			unsigned char v=cp;
-			fprintf(stderr,"%02x ", v);
-		}
-		lastStatus = status;
-	}
-
-	// Couldn't read from port
-	else
-	{
-		//fprintf(stderr, "ERROR: Could not read from fd %d\n", fd);
-	}
-
-	// --------------------------------------------------------------------------
-	//   DEBUGGING REPORTS
-	// --------------------------------------------------------------------------
-	if(msgReceived && debug)
-	{
-		// Report info
-		printf("Received message from UDP with ID #%d (sys:%d|comp:%d):\n", message.msgid, message.sysid, message.compid);
-
-		fprintf(stderr,"Received UDP data: ");
-		unsigned int i;
-		uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
-
-		// check message is write length
-		unsigned int messageLength = mavlink_msg_to_send_buffer(buffer, &message);
-
-		// message length error
-		if (messageLength > MAVLINK_MAX_PACKET_LEN)
-		{
-			fprintf(stderr, "\nFATAL ERROR: MESSAGE LENGTH IS LARGER THAN BUFFER SIZE\n");
-		}
-
-		// print out the buffer
-		else
-		{
-			for (i=0; i<messageLength; i++)
-			{
-				unsigned char v=buffer[i];
-				fprintf(stderr,"%02x ", v);
-			}
-			fprintf(stderr,"\n");
-		}
-	}
-
-	// Done!
-	return msgReceived;
-}
-
-// ------------------------------------------------------------------------------
-//   Write to UDP
-// ------------------------------------------------------------------------------
-int
-UDP_Port::
-write_message(const mavlink_message_t &message)
-{
-	char buf[300];
-
-	// Translate message to buffer
-	unsigned len = mavlink_msg_to_send_buffer((uint8_t*)buf, &message);
-
-	// Write buffer to UDP port, locks port while writing
-	int bytesWritten = _write_port(buf,len);
-
-	return bytesWritten;
-}
-
 
 // ------------------------------------------------------------------------------
 //   Open UDP Port
@@ -233,13 +132,12 @@ start()
 		close(sock);
 		throw EXIT_FAILURE;
 	}
-	//if (fcntl(rx_sock, F_SETFL, O_NONBLOCK | O_ASYNC) < 0)
-	if (fcntl(sock, F_SETFL, O_ASYNC) < 0)
+	/*if (fcntl(sock, F_SETFL, O_NONBLOCK | O_ASYNC) < 0)
 	{
 		fprintf(stderr, "error setting nonblocking: %s\n", strerror(errno));
 		close(sock);
 		throw EXIT_FAILURE;
-	}
+	}*/
 
 	memset(&tx_addr, 0, sizeof(tx_addr));
 	tx_addr.sin_family = AF_INET;
@@ -284,21 +182,6 @@ stop()
 }
 
 // ------------------------------------------------------------------------------
-//   Quit Handler
-// ------------------------------------------------------------------------------
-void
-UDP_Port::
-handle_quit( int sig )
-{
-	try {
-		stop();
-	}
-	catch (int error) {
-		fprintf(stderr,"Warning, could not stop UDP port\n");
-	}
-}
-
-// ------------------------------------------------------------------------------
 //   Read Port with Lock
 // ------------------------------------------------------------------------------
 int
@@ -317,7 +200,7 @@ _read_port(uint8_t &cp)
 		buff_ptr++;
 		result=1;
 	}else{
-		int result = recvfrom(sock, &buff, BUFF_LEN, 0, (struct sockaddr *)&rx_addr, &len);
+		result = recvfrom(sock, &buff, BUFF_LEN, 0, (struct sockaddr *)&rx_addr, &len);
 		if(result > 0){
 			buff_len=result;
 			buff_ptr=0;

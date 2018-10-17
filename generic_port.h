@@ -56,6 +56,7 @@
 //   Includes
 // ------------------------------------------------------------------------------
 
+#include <errno.h>
 #include <common/mavlink.h>
 
 // ------------------------------------------------------------------------------
@@ -77,13 +78,18 @@
 class Generic_Port
 {
 public:
-	Generic_Port(){};
-	virtual ~Generic_Port(){};
-	virtual int read_message(mavlink_message_t &message)=0;
-	virtual int write_message(const mavlink_message_t &message)=0;
+	Generic_Port();
+	virtual ~Generic_Port();
+	virtual int read_message(mavlink_message_t &message);
+	virtual int write_message(const mavlink_message_t &message);
 	virtual bool is_running()=0;
 	virtual void start()=0;
 	virtual void stop()=0;
+protected:
+	bool debug;
+	mavlink_status_t lastStatus;
+	virtual int _read_port(uint8_t &cp)=0;
+	virtual int _write_port(char *buf, unsigned len)=0;
 };
 
 

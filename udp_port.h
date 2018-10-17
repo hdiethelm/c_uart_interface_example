@@ -1,7 +1,8 @@
 /****************************************************************************
  *
- *   Copyright (c) 2014 MAVlink Development Team. All rights reserved.
- *   Author: Trent Lukaczyk, <aerialhedgehog@gmail.com>
+ *   Copyright (c) 2018 MAVlink Development Team. All rights reserved.
+ *   Author: Hannes Diethelm, <hannes.diethelm@gmail.com>
+ *           Trent Lukaczyk, <aerialhedgehog@gmail.com>
  *           Jaycee Lock,    <jaycee.lock@gmail.com>
  *           Lorenz Meier,   <lm@inf.ethz.ch>
  *
@@ -108,8 +109,7 @@ public:
 	UDP_Port(const char *target_ip_, int rx_port_, int tx_port_);
 	virtual ~UDP_Port();
 
-	int read_message(mavlink_message_t &message);
-	int write_message(const mavlink_message_t &message);
+	//read_message and write_message are implemented in base class
 
 	bool is_running(){
 		return is_open;
@@ -117,11 +117,8 @@ public:
 	void start();
 	void stop();
 
-	void handle_quit( int sig );
-
 private:
 
-	mavlink_status_t lastStatus;
 	pthread_mutex_t  lock;
 
 	void initialize_defaults();
