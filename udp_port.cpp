@@ -251,7 +251,7 @@ start()
 	// --------------------------------------------------------------------------
 	//   CONNECTED!
 	// --------------------------------------------------------------------------
-	printf("Connected to %s tx:%i rx:%i\n", target_ip, tx_port, rx_port);
+	printf("Connected to %s rx:%i tx:%i\n", target_ip, rx_port, tx_port);
 	lastStatus.packet_rx_drop_count = 0;
 
 	is_open = true;

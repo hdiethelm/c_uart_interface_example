@@ -75,8 +75,13 @@ top (int argc, char **argv)
 #endif
 	int baudrate = 57600;
 
+	bool use_udp = false;
+	char *udp_ip = (char*)"127.0.0.1";
+	int rx_port = 14540;
+	int tx_port = 14557;
+
 	// do the parse, will throw an int if it fails
-	parse_commandline(argc, argv, uart_name, baudrate);
+	parse_commandline(argc, argv, uart_name, baudrate, use_udp, udp_ip, rx_port, tx_port);
 
 
 	// --------------------------------------------------------------------------
@@ -94,9 +99,8 @@ top (int argc, char **argv)
 	 *
 	 */
 	Generic_Port *port;
-	if(true){
-		//port = new UDP_Port("127.0.0.1", 14550, 14556);
-		port = new UDP_Port("127.0.0.1", 14540, 14557);
+	if(use_udp){
+		port = new UDP_Port(udp_ip, rx_port, tx_port);
 	}else{
 		port = new Serial_Port(uart_name, baudrate);
 	}
@@ -323,11 +327,12 @@ commands(Autopilot_Interface &api)
 // ------------------------------------------------------------------------------
 // throws EXIT_FAILURE if could not open the port
 void
-parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate)
+parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate,
+		bool &use_udp, char *&udp_ip, int &rx_port, int &tx_port)
 {
 
 	// string for command line usage
-	const char *commandline_usage = "usage: mavlink_control -d <devicename> -b <baudrate>";
+	const char *commandline_usage = "usage: mavlink_control [-d <devicename> -b <baudrate>] [-u <udp_ip> -r <rx_port> -t <tx_port>]";
 
 	// Read input arguments
 	for (int i = 1; i < argc; i++) { // argv[0] is "mavlink"
@@ -353,6 +358,39 @@ parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate)
 		if (strcmp(argv[i], "-b") == 0 || strcmp(argv[i], "--baud") == 0) {
 			if (argc > i + 1) {
 				baudrate = atoi(argv[i + 1]);
+
+			} else {
+				printf("%s\n",commandline_usage);
+				throw EXIT_FAILURE;
+			}
+		}
+
+		// UDP ip
+		if (strcmp(argv[i], "-u") == 0 || strcmp(argv[i], "--udp_ip") == 0) {
+			if (argc > i + 1) {
+				udp_ip = argv[i + 1];
+				use_udp = true;
+			} else {
+				printf("%s\n",commandline_usage);
+				throw EXIT_FAILURE;
+			}
+		}
+
+		// RX port
+		if (strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--rx_port") == 0) {
+			if (argc > i + 1) {
+				rx_port = atoi(argv[i + 1]);
+
+			} else {
+				printf("%s\n",commandline_usage);
+				throw EXIT_FAILURE;
+			}
+		}
+
+		// TX port
+		if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--tx_port") == 0) {
+			if (argc > i + 1) {
+				tx_port = atoi(argv[i + 1]);
 
 			} else {
 				printf("%s\n",commandline_usage);
