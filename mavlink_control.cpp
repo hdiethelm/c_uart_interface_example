@@ -347,7 +347,7 @@ parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate,
 {
 
 	// string for command line usage
-	const char *commandline_usage = "usage: mavlink_control [-a ] [-d <devicename> -b <baudrate>] [-u <udp_ip> -r <rx_port> -t <tx_port>]";
+	const char *commandline_usage = "usage: mavlink_control [-d <devicename> -b <baudrate>] [-u <udp_ip> -r <rx_port> -t <tx_port>] [-a ]";
 
 	// Read input arguments
 	for (int i = 1; i < argc; i++) { // argv[0] is "mavlink"
@@ -356,11 +356,6 @@ parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate,
 		if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
 			printf("%s\n",commandline_usage);
 			throw EXIT_FAILURE;
-		}
-
-		// Autotakeoff
-		if (strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--autotakeoff") == 0) {
-			autotakeoff = true;
 		}
 
 		// UART device ID
@@ -417,6 +412,11 @@ parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate,
 				printf("%s\n",commandline_usage);
 				throw EXIT_FAILURE;
 			}
+		}
+
+		// Autotakeoff
+		if (strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--autotakeoff") == 0) {
+			autotakeoff = true;
 		}
 
 	}
