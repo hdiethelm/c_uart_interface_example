@@ -200,6 +200,7 @@ _read_port(uint8_t &cp)
 		buff_ptr++;
 		result=1;
 	}else{
+		len=sizeof(struct sockaddr_in);
 		result = recvfrom(sock, &buff, BUFF_LEN, 0, (struct sockaddr *)&rx_addr, &len);
 		if(result > 0){
 			buff_len=result;
