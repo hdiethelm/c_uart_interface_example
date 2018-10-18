@@ -527,6 +527,15 @@ int
 Autopilot_Interface::
 arm_disarm( bool flag )
 {
+	if(flag)
+	{
+		printf("ARM ROTORS\n");
+	}
+	else
+	{
+		printf("DISARM ROTORS\n");
+	}
+
 	// Prepare command for off-board mode
 	mavlink_command_long_t com = { 0 };
 	com.target_system    = system_id;

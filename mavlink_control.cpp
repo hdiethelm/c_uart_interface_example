@@ -79,9 +79,10 @@ top (int argc, char **argv)
 	char *udp_ip = (char*)"127.0.0.1";
 	int rx_port = 14540;
 	int tx_port = 14557;
+	bool autotakeoff = false;
 
 	// do the parse, will throw an int if it fails
-	parse_commandline(argc, argv, uart_name, baudrate, use_udp, udp_ip, rx_port, tx_port);
+	parse_commandline(argc, argv, uart_name, baudrate, use_udp, udp_ip, rx_port, tx_port, autotakeoff);
 
 
 	// --------------------------------------------------------------------------
@@ -99,9 +100,12 @@ top (int argc, char **argv)
 	 *
 	 */
 	Generic_Port *port;
-	if(use_udp){
+	if(use_udp)
+	{
 		port = new UDP_Port(udp_ip, rx_port, tx_port);
-	}else{
+	}
+	else
+	{
 		port = new Serial_Port(uart_name, baudrate);
 	}
 
@@ -150,7 +154,7 @@ top (int argc, char **argv)
 	/*
 	 * Now we can implement the algorithm we want on top of the autopilot interface
 	 */
-	commands(autopilot_interface);
+	commands(autopilot_interface, autotakeoff);
 
 
 	// --------------------------------------------------------------------------
@@ -180,7 +184,7 @@ top (int argc, char **argv)
 // ------------------------------------------------------------------------------
 
 void
-commands(Autopilot_Interface &api)
+commands(Autopilot_Interface &api, bool autotakeoff)
 {
 
 	// --------------------------------------------------------------------------
@@ -192,9 +196,12 @@ commands(Autopilot_Interface &api)
 
 	// now the autopilot is accepting setpoint commands
 
-	// arm autopilot
-	api.arm_disarm(true);
-	usleep(100); // give some time to let it sink in
+	if(autotakeoff)
+	{
+		// arm autopilot
+		api.arm_disarm(true);
+		usleep(100); // give some time to let it sink in
+	}
 
 	// --------------------------------------------------------------------------
 	//   SEND OFFBOARD COMMANDS
@@ -210,12 +217,16 @@ commands(Autopilot_Interface &api)
 
 
 
-	// Example 1 - Take off to 2m
-	 set_position( ip.x , // [m]
-			 	   ip.y , // [m]
-				   ip.z - 2.0      , // [m]
-				   sp         );
-	 sp.type_mask |= MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_TAKEOFF;
+	// Example 1 - Fly up by to 2m
+	set_position( ip.x ,       // [m]
+			 	  ip.y ,       // [m]
+				  ip.z - 2.0 , // [m]
+				  sp         );
+
+	if(autotakeoff)
+	{
+		sp.type_mask |= MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_TAKEOFF;
+	}
 
 	// SEND THE COMMAND
 	api.update_setpoint(sp);
@@ -244,39 +255,42 @@ commands(Autopilot_Interface &api)
 	api.update_setpoint(sp);
 	// NOW pixhawk will try to move
 
-	// Wait for 8 seconds, check position
-	for (int i=0; i < 8; i++)
+	// Wait for 4 seconds, check position
+	for (int i=0; i < 4; i++)
 	{
 		mavlink_local_position_ned_t pos = api.current_messages.local_position_ned;
 		printf("%i CURRENT POSITION XYZ = [ % .4f , % .4f , % .4f ] \n", i, pos.x, pos.y, pos.z);
 		sleep(1);
 	}
 
-	// Example 3 - Land using fixed velocity
-	set_velocity(  0.0       , // [m/s]
-				   0.0       , // [m/s]
-				   1.0       , // [m/s]
-				   sp        );
-
-	sp.type_mask |= MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_LAND;
-
-	// SEND THE COMMAND
-	api.update_setpoint(sp);
-	// NOW pixhawk will try to move
-
-	// Wait for 8 seconds, check position
-	for (int i=0; i < 8; i++)
+	if(autotakeoff)
 	{
-		mavlink_local_position_ned_t pos = api.current_messages.local_position_ned;
-		printf("%i CURRENT POSITION XYZ = [ % .4f , % .4f , % .4f ] \n", i, pos.x, pos.y, pos.z);
-		sleep(1);
+		// Example 3 - Land using fixed velocity
+		set_velocity(  0.0       , // [m/s]
+					   0.0       , // [m/s]
+					   1.0       , // [m/s]
+					   sp        );
+
+		sp.type_mask |= MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_LAND;
+
+		// SEND THE COMMAND
+		api.update_setpoint(sp);
+		// NOW pixhawk will try to move
+
+		// Wait for 8 seconds, check position
+		for (int i=0; i < 8; i++)
+		{
+			mavlink_local_position_ned_t pos = api.current_messages.local_position_ned;
+			printf("%i CURRENT POSITION XYZ = [ % .4f , % .4f , % .4f ] \n", i, pos.x, pos.y, pos.z);
+			sleep(1);
+		}
+
+		printf("\n");
+
+		// disarm autopilot
+		api.arm_disarm(false);
+		usleep(100); // give some time to let it sink in
 	}
-
-	printf("\n");
-
-	// disarm autopilot
-	api.arm_disarm(false);
-	usleep(100); // give some time to let it sink in
 
 	// --------------------------------------------------------------------------
 	//   STOP OFFBOARD MODE
@@ -329,11 +343,11 @@ commands(Autopilot_Interface &api)
 // throws EXIT_FAILURE if could not open the port
 void
 parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate,
-		bool &use_udp, char *&udp_ip, int &rx_port, int &tx_port)
+		bool &use_udp, char *&udp_ip, int &rx_port, int &tx_port, bool &autotakeoff)
 {
 
 	// string for command line usage
-	const char *commandline_usage = "usage: mavlink_control [-d <devicename> -b <baudrate>] [-u <udp_ip> -r <rx_port> -t <tx_port>]";
+	const char *commandline_usage = "usage: mavlink_control [-a ] [-d <devicename> -b <baudrate>] [-u <udp_ip> -r <rx_port> -t <tx_port>]";
 
 	// Read input arguments
 	for (int i = 1; i < argc; i++) { // argv[0] is "mavlink"
@@ -344,11 +358,16 @@ parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate,
 			throw EXIT_FAILURE;
 		}
 
+		// Autotakeoff
+		if (strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--autotakeoff") == 0) {
+			autotakeoff = true;
+		}
+
 		// UART device ID
 		if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--device") == 0) {
 			if (argc > i + 1) {
-				uart_name = argv[i + 1];
-
+				i++;
+				uart_name = argv[i];
 			} else {
 				printf("%s\n",commandline_usage);
 				throw EXIT_FAILURE;
@@ -358,8 +377,8 @@ parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate,
 		// Baud rate
 		if (strcmp(argv[i], "-b") == 0 || strcmp(argv[i], "--baud") == 0) {
 			if (argc > i + 1) {
-				baudrate = atoi(argv[i + 1]);
-
+				i++;
+				baudrate = atoi(argv[i]);
 			} else {
 				printf("%s\n",commandline_usage);
 				throw EXIT_FAILURE;
@@ -369,7 +388,8 @@ parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate,
 		// UDP ip
 		if (strcmp(argv[i], "-u") == 0 || strcmp(argv[i], "--udp_ip") == 0) {
 			if (argc > i + 1) {
-				udp_ip = argv[i + 1];
+				i++;
+				udp_ip = argv[i];
 				use_udp = true;
 			} else {
 				printf("%s\n",commandline_usage);
@@ -380,8 +400,8 @@ parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate,
 		// RX port
 		if (strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--rx_port") == 0) {
 			if (argc > i + 1) {
-				rx_port = atoi(argv[i + 1]);
-
+				i++;
+				rx_port = atoi(argv[i]);
 			} else {
 				printf("%s\n",commandline_usage);
 				throw EXIT_FAILURE;
@@ -391,8 +411,8 @@ parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate,
 		// TX port
 		if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--tx_port") == 0) {
 			if (argc > i + 1) {
-				tx_port = atoi(argv[i + 1]);
-
+				i++;
+				tx_port = atoi(argv[i]);
 			} else {
 				printf("%s\n",commandline_usage);
 				throw EXIT_FAILURE;
