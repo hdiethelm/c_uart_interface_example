@@ -38,9 +38,9 @@
 /**
  * @file udp_port.h
  *
- * @brief Serial interface definition
+ * @brief UDP interface definition
  *
- * Functions for opening, closing, reading and writing via serial ports
+ * Functions for opening, closing, reading and writing via UDP ports
  *
  * @author Hannes Diethelm, <hannes.diethelm@gmail.com>
  * @author Trent Lukaczyk, <aerialhedgehog@gmail.com>
