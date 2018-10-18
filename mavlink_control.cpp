@@ -192,6 +192,7 @@ commands(Autopilot_Interface &api)
 
 	// now the autopilot is accepting setpoint commands
 
+	// arm autopilot
 	api.arm_disarm(true);
 	usleep(100); // give some time to let it sink in
 
@@ -209,16 +210,34 @@ commands(Autopilot_Interface &api)
 
 
 
-	// Example 2 - Set Position
+	// Example 1 - Take off to 2m
 	 set_position( ip.x , // [m]
 			 	   ip.y , // [m]
 				   ip.z - 2.0      , // [m]
 				   sp         );
 	 sp.type_mask |= MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_TAKEOFF;
 
+	// SEND THE COMMAND
+	api.update_setpoint(sp);
+	// NOW pixhawk will try to move
 
-	// Example 1.2 - Append Yaw Command
-	set_yaw( ip.yaw , // [rad]
+	// Wait for 8 seconds, check position
+	for (int i=0; i < 8; i++)
+	{
+		mavlink_local_position_ned_t pos = api.current_messages.local_position_ned;
+		printf("%i CURRENT POSITION XYZ = [ % .4f , % .4f , % .4f ] \n", i, pos.x, pos.y, pos.z);
+		sleep(1);
+	}
+
+
+	// Example 2 - Set Velocity
+	set_velocity( -1.0       , // [m/s]
+				  -1.0       , // [m/s]
+				   0.0       , // [m/s]
+				   sp        );
+
+	// Example 2.1 - Append Yaw Command
+	set_yaw( ip.yaw + 90.0/180.0*M_PI, // [rad]
 			 sp     );
 
 	// SEND THE COMMAND
@@ -233,26 +252,7 @@ commands(Autopilot_Interface &api)
 		sleep(1);
 	}
 
-
-	// Example 1 - Set Velocity
-	set_velocity( -1.0       , // [m/s]
-				  -1.0       , // [m/s]
-				   0.0       , // [m/s]
-				   sp        );
-
-	// SEND THE COMMAND
-	api.update_setpoint(sp);
-	// NOW pixhawk will try to move
-
-	// Wait for 8 seconds, check position
-	for (int i=0; i < 8; i++)
-	{
-		mavlink_local_position_ned_t pos = api.current_messages.local_position_ned;
-		printf("%i CURRENT POSITION XYZ = [ % .4f , % .4f , % .4f ] \n", i, pos.x, pos.y, pos.z);
-		sleep(1);
-	}
-
-	// Example 1 - Set Velocity
+	// Example 3 - Land using fixed velocity
 	set_velocity(  0.0       , // [m/s]
 				   0.0       , // [m/s]
 				   1.0       , // [m/s]
@@ -274,6 +274,7 @@ commands(Autopilot_Interface &api)
 
 	printf("\n");
 
+	// disarm autopilot
 	api.arm_disarm(false);
 	usleep(100); // give some time to let it sink in
 
